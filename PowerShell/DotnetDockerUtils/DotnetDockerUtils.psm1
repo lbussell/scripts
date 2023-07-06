@@ -13,6 +13,12 @@ function Update-ImageSizes {
         [string]
         $buildId,
 
+        [string]
+        $os,
+
+        [switch]
+        $force = $false,
+
         [switch]
         $dryRun = $false
     )
@@ -36,8 +42,13 @@ function Update-ImageSizes {
 
             $product = $parts[1]
             $version = $parts[2]
-            $os = $parts[3]
+            $osPart = $parts[3]
             $arch = $parts[4]
+
+            # if os is set, and doesn't match the one we're looking for, skip
+            if ($os -and $os -ne $osPart) {
+                return
+            }
 
             if ($version -eq "8.0") {
                 $version = "8.0-preview"
@@ -48,9 +59,9 @@ function Update-ImageSizes {
             }
 
             if ($isWindoze) {
-                $imageUrl = "${baseUrl}${product}:${version}-${os}"
+                $imageUrl = "${baseUrl}${product}:${version}-${osPart}"
             } else {
-                $imageUrl = "${baseUrl}${product}:${version}-${os}-${arch}"
+                $imageUrl = "${baseUrl}${product}:${version}-${osPart}-${arch}"
             }
 
             Write-Host "${name} => ${imageUrl}"
@@ -59,8 +70,8 @@ function Update-ImageSizes {
             $oldSize = [long]$baseline.$repo.$name
             Write-Host "$oldSize => $size"
 
-            # only update baseline if the size has changed >20% up or down
-            if ($size -gt $oldSize * [double]1.1 -or $size -lt $oldSize * [double]0.9) {
+            # only update baseline if the size has changed >20% up or down or if $force is set
+            if ($size -gt $oldSize * [double]1.1 -or $size -lt $oldSize * [double]0.9 -or $force) {
                 Write-Host "Updating baseline for $name from $oldSize to $size"
                 $baseline.$repo.$name = $size
             }
