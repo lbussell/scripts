@@ -8,13 +8,15 @@ function Update-ImageSizes {
         [string]
         $baselinePath,
 
-        [Parameter(Mandatory = $true)]
-        [Alias('b')]
-        [string]
-        $buildId,
+        # [Alias('b')]
+        # [string]
+        # $buildId,
 
         [string]
         $os,
+
+        [string]
+        $path,
 
         [switch]
         $force = $false,
@@ -29,7 +31,10 @@ function Update-ImageSizes {
         Write-Host "Doing special things for Windows"
     }
 
-    $baseUrl = "dotnetdocker.azurecr.io/build-staging/${buildId}/dotnet/nightly/"
+    # $baseUrl = "dotnetdocker.azurecr.io/build-staging/${buildId}/dotnet/nightly/"
+    $baseUrl = "mcr.microsoft.com/dotnet/nightly/"
+
+    # If buildId is not set, set baseUrl to mcrBaseUrl
 
     $baseline = Get-Content $baselinePath | ConvertFrom-Json
 
@@ -50,8 +55,8 @@ function Update-ImageSizes {
                 return
             }
 
-            if ($version -eq "8.0") {
-                $version = "8.0-preview"
+            if ($path -and $name -inotlike ${path}) {
+                return
             }
 
             if ($product -eq "monitor-base") {
@@ -70,11 +75,15 @@ function Update-ImageSizes {
             $oldSize = [long]$baseline.$repo.$name
             Write-Host "$oldSize => $size"
 
+            $low = $oldSize * [double]0.95
+            $hi = $oldSize * [double]1.05
+            Write-Host "Acceptable Range: $low - $hi"
             # only update baseline if the size has changed >20% up or down or if $force is set
-            if ($size -gt $oldSize * [double]1.1 -or $size -lt $oldSize * [double]0.9 -or $force) {
+            if ($size -gt $hi -or $size -lt $low -or $force) {
                 Write-Host "Updating baseline for $name from $oldSize to $size"
                 $baseline.$repo.$name = $size
             }
+            Write-Host
 
             if (!$dryRun) {
                 $baseline | ConvertTo-Json | Out-File $baselinePath
