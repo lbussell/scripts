@@ -28,7 +28,10 @@ function Update-ImageSizes {
         $cleanup = $false,
 
         [string]
-        $previewVersion = "9.0"
+        $previewVersion = "9.0",
+
+        [string]
+        $monitorPreviewVersion = "8.1"
     )
 
     $updatingWindowsSizes = $baselinePath.Contains('windows')
@@ -72,7 +75,7 @@ function Update-ImageSizes {
             if ($updatingWindowsSizes) {
                 $imageUrl = "${baseUrl}${product}:${version}-${osPart}"
             } else {
-                if ($version -contains $previewVersion) {
+                if ($version -contains $previewVersion -or $version -contains $monitorPreviewVersion) {
                     $imageUrl = "${baseUrl}${product}:${version}-preview-${osPart}-${arch}"
                     write-host $version
                 }
@@ -106,6 +109,10 @@ function Update-ImageSizes {
 
             Write-Host "---"
         }
+
+        Write-Host "Finished updating $repo"
+        Get-Content $baselinePath
+        Write-Host "---"
     }
 
     if (!$dryRun) {
