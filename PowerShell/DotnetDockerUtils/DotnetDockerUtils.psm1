@@ -24,6 +24,9 @@ function Update-ImageSizes {
         [switch]
         $dryRun = $false,
 
+        [switch]
+        $cleanup = $false,
+
         [string]
         $previewVersion = "9.0"
     )
@@ -43,6 +46,7 @@ function Update-ImageSizes {
 
     ForEach ($object in $baseline.PsObject.Properties) {
         $repo = $object.Name
+        $toRemove = @()
 
         $object.Value.PSObject.Properties | ForEach-Object {
             $name = $_.Name
@@ -81,6 +85,7 @@ function Update-ImageSizes {
             Write-Host "${name} => ${imageUrl}"
 
             $size = [long](Get-ImageSize -image $imageUrl)
+            $toRemove += $imageUrl
             $oldSize = [long]$baseline.$repo.$name
             Write-Host "$oldSize => $size"
 
@@ -92,10 +97,17 @@ function Update-ImageSizes {
                 Write-Host "Updating baseline for $name from $oldSize to $size"
                 $baseline.$repo.$name = $size
             }
-            Write-Host
+            Write-Host "---"
 
             if (!$dryRun) {
                 $baseline | ConvertTo-Json | Out-File $baselinePath
+            }
+        }
+
+        if ($cleanup) {
+            $toRemove | ForEach-Object {
+                Write-Host "Removing $_"
+                docker image rm $_
             }
         }
     }
