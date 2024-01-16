@@ -8,9 +8,9 @@ function Update-ImageSizes {
         [string]
         $baselinePath,
 
-        # [Alias('b')]
-        # [string]
-        # $buildId,
+        [Alias('b')]
+        [string]
+        $buildId = "",
 
         [string]
         $os,
@@ -22,19 +22,22 @@ function Update-ImageSizes {
         $force = $false,
 
         [switch]
-        $dryRun = $false
+        $dryRun = $false,
+
+        [string]
+        $previewVersion = "9.0"
     )
 
-    $isWindoze = $baselinePath.Contains('windows')
-
-    if ($isWindoze) {
+    $updatingWindowsSizes = $baselinePath.Contains('windows')
+    if ($updatingWindowsSizes) {
         Write-Host "Doing special things for Windows"
     }
 
-    # $baseUrl = "dotnetdocker.azurecr.io/build-staging/${buildId}/dotnet/nightly/"
-    $baseUrl = "mcr.microsoft.com/dotnet/nightly/"
-
-    # If buildId is not set, set baseUrl to mcrBaseUrl
+    if ($buildId -and $buildId -ne "") {
+        $baseUrl = "dotnetdocker.azurecr.io/build/${buildId}/dotnet/nightly/"
+    } else {
+        $baseUrl = "mcr.microsoft.com/dotnet/nightly/"
+    }
 
     $baseline = Get-Content $baselinePath | ConvertFrom-Json
 
@@ -63,10 +66,16 @@ function Update-ImageSizes {
                 $product = "monitor/base"
             }
 
-            if ($isWindoze) {
+            if ($updatingWindowsSizes) {
                 $imageUrl = "${baseUrl}${product}:${version}-${osPart}"
             } else {
-                $imageUrl = "${baseUrl}${product}:${version}-${osPart}-${arch}"
+                if ($version -contains $previewVersion) {
+                    $imageUrl = "${baseUrl}${product}:${version}-preview-${osPart}-${arch}"
+                    write-host $version
+                }
+                else {
+                    $imageUrl = "${baseUrl}${product}:${version}-${osPart}-${arch}"
+                }
             }
 
             Write-Host "${name} => ${imageUrl}"
