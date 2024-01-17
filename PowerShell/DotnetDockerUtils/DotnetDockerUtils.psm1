@@ -72,16 +72,15 @@ function Update-ImageSizes {
                 $product = "monitor/base"
             }
 
-            if ($updatingWindowsSizes) {
-                $imageUrl = "${baseUrl}${product}:${version}-${osPart}"
-            } else {
-                if ($version -contains $previewVersion -or $version -contains $monitorPreviewVersion) {
-                    $imageUrl = "${baseUrl}${product}:${version}-preview-${osPart}-${arch}"
-                    write-host $version
-                }
-                else {
-                    $imageUrl = "${baseUrl}${product}:${version}-${osPart}-${arch}"
-                }
+            if ($version -contains $previewVersion -or $version -contains $monitorPreviewVersion) {
+                $version = "${version}-preview"
+            }
+
+            $imageUrl = "${baseUrl}${product}:${version}-${osPart}"
+
+            # For linux, add arch to the tag
+            if (!$updatingWindowsSizes) {
+                $imageUrl = "${imageUrl}-${arch}"
             }
 
             Write-Host "${name} => ${imageUrl}"
