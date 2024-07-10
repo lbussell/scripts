@@ -1,3 +1,4 @@
+param ([int]$sleepDuration = 5)
 
 $month = (get-date).Month
 
@@ -29,6 +30,6 @@ while ($true) {
             -d "Please queue Windows container rebuilds now." `
         exit 0
     }
-    Start-Sleep 5
+    Start-Sleep -Seconds $sleepDuration
     Write-Host
 }

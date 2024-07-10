@@ -37,13 +37,9 @@ function Copy-DotnetRepo {
     # Change to the repository directory
     Set-Location $repoName
 
-    # rename origin to lbussell
-    git remote rename origin $me
-
     # Add the additional remotes
     git remote add upstream $upstream
     git remote add dnceng $dnceng
-    git remote add origin BAD
 
     git fetch upstream
     git fetch dnceng
@@ -71,4 +67,19 @@ function New-FeatureBranch {
     # Also make sure we don't track the upstream branch so we don't accidentally push to it
     git checkout ${sourceRemote}/${upstreamBranch}
     git checkout -b ${branchName}
+}
+
+function Open-DistrolessImage {
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory = $true)]
+        [string]$distrolessImageTag
+    )
+
+    $dockerfile = Join-Path $PSScriptRoot "Dockerfile.inspect-distroless"
+    $imageName = "inspect"
+
+    docker build -t inspect -f $dockerfile --build-arg DISTROLESS_IMAGE=$distrolessImageTag .
+    docker run -it --rm inspect
 }

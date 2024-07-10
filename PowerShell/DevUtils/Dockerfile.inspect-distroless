@@ -1,0 +1,7 @@
+ARG DISTROLESS_IMAGE
+FROM $DISTROLESS_IMAGE AS distroless
+
+FROM mcr.microsoft.com/dotnet/runtime-deps
+
+COPY --from=distroless / /rootfs
+WORKDIR /rootfs
