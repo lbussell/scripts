@@ -83,3 +83,33 @@ function Open-DistrolessImage {
     docker build -t inspect -f $dockerfile --build-arg DISTROLESS_IMAGE=$distrolessImageTag .
     docker run -it --rm inspect
 }
+
+function Find-Packages {
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory = $true)]
+        [string]$tag,
+        [Parameter(Position=1)]
+        [string]$output = "output.json"
+    )
+
+    $runningContainerName = "package-info"
+    $syftVersion = "v1.8.0"
+    $syftImage = "anchore/syft:$syftVersion"
+
+    docker rm $runningContainerName
+
+    docker pull $syftImage
+    docker run `
+        --name $runningContainerName `
+        -v /var/run/docker.sock:/var/run/docker.sock `
+        anchore/syft:v1.8.0 scan docker:$tag `
+        -o json=/artifacts/$output `
+        --exclude /usr/share/dotnet
+
+    docker cp ${runningContainerName}:/artifacts/$output $output
+    docker rm ${runningContainerName}
+
+    invoke-item $output
+}
