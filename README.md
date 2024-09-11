@@ -4,9 +4,20 @@ These are my personal scripts that help save me time while I work.
 
 ## Setup
 
-### PowerShell
+### PowerShell (symlink)
+
+Get the command ready. This will put the correct command in your clipboard.
 
 ```pwsh
+mkdir $(Split-Path -parent $PROFILE.CurrentUserAllHosts)
+
+Set-Clipboard $('New-Item -Path ' + [IO.Path]::Combine($($pwd.Path), 'PowerShell', 'profile.ps1') + ' -Value ' + $PROFILE.CurrentUserAllHosts + ' -ItemType "SymbolicLink" -Force')
+```
+
+Then, paste it into an Administrator PowerShell session (you need admin privileges to create symlinks on Windows).
+
+```pwsh
+mkdir $HOME/Documents/PowerShell/
 Copy-Item PowerShell/Microsoft.PowerShell_Profile.ps1 $HOME/Documents/PowerShell/
 ```
 
