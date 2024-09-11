@@ -4,6 +4,20 @@ These are my personal scripts that help save me time while I work.
 
 ## Setup
 
+### WinGet
+
+Local:
+
+```console
+WinGet import --no-upgrade --accept-package-agreements --accept-source-agreements --disable-interactivity WinGet\packages.jsonc
+```
+
+Remote:
+
+```console
+WIP...
+```
+
 ### PowerShell (symlink)
 
 Get the command ready. This will put the correct command in your clipboard.
