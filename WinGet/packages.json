@@ -6,33 +6,23 @@
 		{
 			"Packages" :
 			[
-				// Tools
 				{ "PackageIdentifier" : "Microsoft.VisualStudioCode" },
 
-				// SDKs
 				{ "PackageIdentifier" : "Microsoft.DotNet.SDK.8" },
 				{ "PackageIdentifier" : "Microsoft.DotNet.SDK.6" },
 				{ "PackageIdentifier" : "Microsoft.DotNet.SDK.Preview" },
 
-				// Dev Tools
 				{ "PackageIdentifier" : "Microsoft.PowerShell" },
 				{ "PackageIdentifier" : "Git.Git" },
 				{ "PackageIdentifier" : "GitHub.cli" },
 				{ "PackageIdentifier" : "Microsoft.AzureCLI" },
 
-				// Docker Tools
 				{ "PackageIdentifier" : "Docker.DockerDesktop" },
 				{ "PackageIdentifier" : "NotaryProject.Notation" },
 				{ "PackageIdentifier" : "ORASProject.ORAS" },
 
-				// Other Tools
 				{ "PackageIdentifier" : "7zip.7zip" },
-				{ "PackageIdentifier" : "jqlang.jq" },
-
-				// Desktop Things
-				// { "PackageIdentifier" : "LGUG2Z.whkd" },
-				// { "PackageIdentifier" : "LGUG2Z.komorebi" },
-				// { "PackageIdentifier" : "AgileBits.1Password" }
+				{ "PackageIdentifier" : "jqlang.jq" }
 			],
 			"SourceDetails" :
 			{
@@ -40,21 +30,6 @@
 				"Identifier" : "Microsoft.Winget.Source_8wekyb3d8bbwe",
 				"Name" : "winget",
 				"Type" : "Microsoft.PreIndexed.Package"
-			}
-		},
-		{
-			"Packages" :
-			[
-				{
-					"PackageIdentifier" : "XPFFZHVGQWWLHB"
-				}
-			],
-			"SourceDetails" :
-			{
-				"Argument" : "https://storeedgefd.dsx.mp.microsoft.com/v9.0",
-				"Identifier" : "StoreEdgeFD",
-				"Name" : "msstore",
-				"Type" : "Microsoft.Rest"
 			}
 		}
 	],
