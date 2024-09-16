@@ -18,7 +18,7 @@ Remote:
 WIP...
 ```
 
-### PowerShell (symlink)
+### PowerShell Profile
 
 Get the command ready. This will put the correct command in your clipboard.
 
@@ -37,15 +37,24 @@ Copy-Item PowerShell/Microsoft.PowerShell_Profile.ps1 $HOME/Documents/PowerShell
 
 Reference for [profile types and locations](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_profiles?view=powershell-7.4#profile-types-and-locations).
 
-### Git
+### Bash Profile
 
-#### PowerShell
+```bash
+echo "source $(pwd)/bash/.bashrc" >> $HOME/.bashrc
+echo "source $(pwd)/bash/.bash_profile" >> $HOME/.bash_profile
+```
+
+### Git Config
+
+**PowerShell**:
 
 ```pwsh
 $gitconfig = [IO.Path]::Combine($($pwd.Path), '.gitconfig')
 git config --local include.path $gitconfig
 ```
 
-#### Bash
+**Bash**:
 
-You got this!
+```bash
+git config --global include.path $(pwd)/.gitconfig
+```
