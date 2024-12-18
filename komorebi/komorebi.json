@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LGUG2Z/komorebi/v0.1.28/schema.json",
+  "app_specific_configuration_path": "$Env:USERPROFILE/applications.yaml",
+  "window_hiding_behaviour": "Cloak",
+  "cross_monitor_move_behaviour": "Insert",
+  "default_workspace_padding": 4,
+  "default_container_padding": 4,
+  "border": true,
+  "border_width": 3,
+  "border_offset": -1,
+  "border_colours": {
+    "single": "#2e9ef4",
+    "stack": "#2e9ef4",
+    "monocle": "#900000",
+    "unfocused": "#333333"
+  },
+  "border_style": "Square",
+  "stackbar": {
+    "height": 20,
+    "mode": "OnStack",
+    "tabs": {
+      "font_size": 18,
+      "font_family": "Cascadia Mono Light",
+      "width": 200,
+      "focused_text": "#ffffff",
+      "unfocused_text": "#888888",
+      "background": "#285577"
+    }
+  },
+  "monitors": [
+    {
+      "workspaces": [
+        {
+          "name": "I",
+          "layout": "Columns",
+          "initial_workspace_rules": [
+            {
+              "kind": "Exe",
+              "id": "OUTLOOK.EXE"
+            },
+            {
+              "kind": "Class",
+              "id": "olk"
+            },
+            {
+              "kind": "Class",
+              "id": "TeamsWebView"
+            },
+            {
+              "kind": "Exe",
+              "id": "Teams.exe"
+            },
+            {
+              "kind": "Title",
+              "id": "Microsoft Teams Notification"
+            },
+            {
+              "kind": "Title",
+              "id": "Microsoft Teams Call"
+            }
+          ]
+        },
+        {
+          "name": "II",
+          "layout": "BSP",
+          "initial_workspace_rules": [
+            {
+              "kind": "Exe",
+              "id": "Code.exe"
+            },
+            {
+              "kind": "Class",
+              "id": "msedge"
+            }
+          ]
+        },
+        {
+          "name": "III",
+          "layout": "Grid",
+          "workspace_rules": [
+          ]
+        },
+        {
+          "name": "IV",
+          "layout": "Grid"
+        },
+        {
+          "name": "V",
+          "layout": "Grid"
+        },
+        {
+          "name": "VI",
+          "layout": "Grid"
+        },
+        {
+          "name": "VII",
+          "layout": "BSP"
+        }
+      ]
+    }
+  ]
+}
