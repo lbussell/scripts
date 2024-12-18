@@ -51,6 +51,14 @@
 
 [alias]
 
+  # "start work"
+  # usage: git sw <upstream branch> <new branch>
+  sw = !git fetch upstream && git checkout "upstream/$1" && git checkout -b "$2"
+
+  h = log --oneline --decorate --graph -5
+  hh = log --oneline --decorate --graph -10
+  hhh = log --oneline --decorate --graph -15
+
   ##
   # Short aliases for frequent commands.
   #
@@ -114,10 +122,11 @@
   ### commit aliases ###
 
   # commit - amend the tip of the current branch rather than creating a new commit.
-  ca = commit --amend
+  cam = commit --amend
 
   # commit - amend the tip of the current branch, and edit the message.
-  cam = commit --amend --message
+  camm = commit --amend --message
+  calm = commit --all --message
 
   # commit - amend the tip of the current branch, and do not edit the message.
   cane = commit --amend --no-edit
@@ -1600,7 +1609,7 @@
   #
   # Thanks to https://github.com/gwjo
 
-  # topic-base-branch = "!git config --get init.topicBaseBranchName || git default-branch"
+  topic-base-branch = "!git config --get init.topicBaseBranchName || git default-branch"
 
   # Start a topic branch.
   #
@@ -1626,14 +1635,19 @@
   # the team provide feedback on the work-in-progress, and also to
   # run any automatic tests to verify the branch runs successfully.
 
-  # topic-begin = "!f(){ \
-  #   new_branch=\"$1\"; \
-  #   old_branch=\"$(git topic-base-branch)\"; \
-  #   git checkout \"$old_branch\"; \
-  #   git pull --ff-only; \
-  #   git checkout -b \"$new_branch\" \"$old_branch\"; \
-  #   git push -u origin \"$new_branch\"; \
-  # };f"
+  topic-nightly = "!f(){ \
+    new_branch=\"$1\"; \
+    git fetch upstream; \
+    git checkout upstream/nightly; \
+    git checkout -b \"$new_branch\"; \
+  };f"
+
+  topic-main = "!f(){ \
+    new_branch=\"$1\"; \
+    git fetch upstream; \
+    git checkout upstream/main; \
+    git checkout -b \"$new_branch\"; \
+  };f"
 
   # Stop a topic branch; this must be the current branch.
   #
