@@ -2,7 +2,7 @@ param ([int]$sleepDuration = 5)
 
 $month = (get-date).Month
 
-$windowsTags = @("nanoserver:1809-amd64", "nanoserver:ltsc2022-amd64", "servercore:ltsc2022-amd64", "servercore:ltsc2019-amd64", "servercore:ltsc2016-amd64")
+$windowsTags = @("nanoserver:1809-amd64", "nanoserver:ltsc2022-amd64", "servercore:ltsc2022-amd64", "servercore:ltsc2019-amd64", "servercore:ltsc2016-amd64", "servercore:ltsc2025-amd64")
 
 try {
     Write-Host "Checking if Dredge is installed."
@@ -23,11 +23,8 @@ while ($true) {
         Write-Host $created
     }
     if ($allMatch) {
-        Write-Host "foo"
-        curl `
-            -H "Title: Windows Base Images Updated" `
-            -H "Tags: warning" `
-            -d "Please queue Windows container rebuilds now." `
+        Write-Host "All Windows images have been updated."
+        [Console]::Beep()
         exit 0
     }
     Start-Sleep -Seconds $sleepDuration
