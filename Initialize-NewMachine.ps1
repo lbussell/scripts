@@ -4,6 +4,7 @@ $packages = @(
     "Microsoft.DotNet.SDK.8"
     "Microsoft.DotNet.SDK.9"
     "Microsoft.DotNet.SDK.Preview"
+    "GitHub.CLI"
     "Docker.DockerDesktop"
 
     # text editors
