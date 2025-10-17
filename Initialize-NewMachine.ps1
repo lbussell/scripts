@@ -1,5 +1,7 @@
 
 $packages = @(
+    "Git.Git"
+
     # dev tools
     "Microsoft.DotNet.SDK.8"
     "Microsoft.DotNet.SDK.9"
