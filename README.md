@@ -4,18 +4,16 @@ These are my personal scripts that help save me time while I work.
 
 ## Setup
 
-### WinGet
+### Windows
 
-Local:
-
-```console
-WinGet import --no-upgrade --accept-package-agreements --accept-source-agreements --disable-interactivity WinGet\packages.jsonc
+```pwsh
+irm https://raw.githubusercontent.com/lbussell/scripts/refs/heads/main/Initialize-NewMachine.ps1 | iex
 ```
 
-Remote:
+If this is the first time running a remote script, you might need to run this first:
 
-```console
-WIP...
+```pwsh
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 ### PowerShell Profile
