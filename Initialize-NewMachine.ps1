@@ -1,5 +1,5 @@
-
 $packages = @(
+    "Microsoft.PowerShell"
     "Git.Git"
 
     # dev tools
