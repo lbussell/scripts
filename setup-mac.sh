@@ -139,6 +139,7 @@ pushd ~/src
 clone_repo_atomic "https://github.com/lbussell/dotnet-docker"                       "https://github.com/dotnet/dotnet-docker"
 clone_repo_atomic "https://github.com/lbussell/docker-tools"                        "https://github.com/dotnet/docker-tools"
 clone_repo_atomic "https://github.com/lbussell/dotnet-buildtools-prereqs-docker"    "https://github.com/dotnet/dotnet-buildtools-prereqs-docker"
+clone_repo_atomic "https://github.com/lbussell/arcade"                              "https://github.com/dotnet/arcade"
 clone_repo_atomic "https://github.com/lbussell/dotnet-framework-docker"             "https://github.com/microsoft/dotnet-framework-docker"
 popd
 
