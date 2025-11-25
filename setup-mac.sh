@@ -123,11 +123,12 @@ clone_repo_atomic() {
 run_atomically "fix_dock" fix_dock
 run_atomically "install_homebrew" install_homebrew
 
-# Install casks
+# Install homebrew packages
 brew_install_cask_atomic "ghostty"
 brew_install_cask_atomic "claude-code"
 brew_install_cask_atomic "git-credential-manager"
 brew_install_cask_atomic "powershell"
+brew_install_atomic "structuredlogviewer"
 
 # Specialized installs
 run_atomically "install_ghcp_cli" install_ghcp_cli
