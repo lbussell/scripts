@@ -128,6 +128,7 @@ brew_install_cask_atomic "ghostty"
 brew_install_cask_atomic "claude-code"
 brew_install_cask_atomic "git-credential-manager"
 brew_install_cask_atomic "powershell"
+brew_install_atomic "azure-cli"
 brew_install_atomic "structuredlogviewer"
 
 # Specialized installs
