@@ -80,6 +80,10 @@ install_ghcp_cli() {
     npm install -g @github/copilot
 }
 
+install_azd() {
+    curl -fsSL https://aka.ms/install-azd.sh | bash
+}
+
 create_src() {
     echo "> Creating ~/src..."
     if [[ ! -d ~/src ]]; then
@@ -133,6 +137,7 @@ brew_install_atomic "structuredlogviewer"
 
 # Specialized installs
 run_atomically "install_ghcp_cli" install_ghcp_cli
+run_atomically "install_azd" install_azd
 
 # Clone repos
 run_atomically "create_src" create_src
