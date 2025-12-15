@@ -134,6 +134,7 @@ brew_install_cask_atomic "git-credential-manager"
 brew_install_cask_atomic "powershell"
 brew_install_atomic "azure-cli"
 brew_install_atomic "structuredlogviewer"
+brew_install_atomic "syft"
 
 # Specialized installs
 run_atomically "install_ghcp_cli" install_ghcp_cli
