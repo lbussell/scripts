@@ -1,15 +1,17 @@
 #!/usr/bin/env bun
 
-import { getPullRequests, getIssues, getPipelineRuns, prefetchAzdoToken, getAzdoPullRequests } from "./triageLib.ts";
+import { getPullRequests, getIssues, getPipelineRuns, prefetchAzdoToken, getAzdoPullRequests, getRepoActivity } from "./triageLib.ts";
 
 const lookbackHours = 48;
 
 const gitHubRepos = [
     "dotnet/dotnet-docker",
-    "dotnet/dotnet-docker-internal",
+    // "dotnet/dotnet-docker-internal",
     "dotnet/docker-tools",
     "microsoft/dotnet-framework-docker",
 ];
+const includeIssueLabels = ["untriaged"];
+const excludeIssueLabels = ["vulnerability"];
 
 const azdoOrg = "dnceng"
 const azdoProject = "internal"
@@ -45,7 +47,7 @@ console.table(
     }))
 );
 
-const issues = await getIssues(gitHubRepos, { labels: ["untriaged"], excludeLabels: ["vulnerability"] });
+const issues = await getIssues(gitHubRepos, { labels: includeIssueLabels, excludeLabels: excludeIssueLabels });
 issues.sort((a, b) => a.repo.localeCompare(b.repo) || a.createdAt.localeCompare(b.createdAt));
 
 console.log("\nUntriaged Issues:");
@@ -94,5 +96,24 @@ console.table(
         title: p.title.length > 60 ? p.title.slice(0, 57) + "..." : p.title,
         target: p.targetBranch,
         created: p.creationDate.slice(0, 10),
+    }))
+);
+
+const activity = await getRepoActivity(gitHubRepos, lookbackHours);
+activity.sort((a, b) =>
+    a.repo.localeCompare(b.repo)
+    || b.createdAt.localeCompare(a.createdAt));
+
+console.log(`\nGitHub Activity (last ${lookbackHours}h):`);
+console.table(
+    activity.map(a => ({
+        repo: a.repo,
+        when: a.createdAt.slice(0, 16).replace("T", " "),
+        type: a.type,
+        actor: a.actor,
+        target: a.target,
+        ref: a.ref,
+        action: a.action,
+        title: a.title.length > 50 ? a.title.slice(0, 47) + "..." : a.title,
     }))
 );
