@@ -108,17 +108,29 @@ const pipelineDefinitionScopes = unique(triageRepos.flatMap(repo => repo.azdoPip
 const repoByGitHubRepo = new Map(triageRepos.flatMap(repo => repo.github ? [[repo.github.repo, repo.name] as const] : []));
 const repoByAzdoRepo = new Map(triageRepos.flatMap(repo => (repo.azdoRepos ?? []).map(azdoRepo => [azdoRepo, repo.name] as const)));
 const repoByPipelineScope = new Map(triageRepos.flatMap(repo => (repo.azdoPipelineScopes ?? []).map(scope => [scope, repo.name] as const)));
+const longCommentLength = 200;
+
+function isLongComment(details: string): boolean {
+    return details.length > longCommentLength || details.split(/\r?\n/).length > 4;
+}
+
+function formatCommentAction(details: string, action: string, longAction: string): string {
+    if (!details) {
+        return action;
+    }
+    return isLongComment(details) ? longAction : `${action}: ${details}`;
+}
 
 function formatActivityAction(activity: RepoActivity): string {
     const review = activity.title.match(/^review \(([^)]+)\):/);
     if (review) {
-        return `review ${review[1]}${activity.details ? `: ${activity.details}` : ""}`;
+        return formatCommentAction(activity.details, `review ${review[1]}`, "left a long review");
     }
     if (activity.type === "IssueComment") {
-        return `commented${activity.details ? `: ${activity.details}` : ""}`;
+        return formatCommentAction(activity.details, "commented", "left a long comment");
     }
     if (activity.type === "PullRequestReviewComment") {
-        return `review commented${activity.details ? `: ${activity.details}` : ""}`;
+        return formatCommentAction(activity.details, "review commented", "left a long review comment");
     }
     if (activity.type === "PullRequest") {
         if (activity.action === "labeled" && activity.details) {

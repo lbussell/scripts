@@ -199,6 +199,11 @@ function targetUrl(repo: string, kind: "pull" | "issue", number: number): string
     return `https://github.com/${repo}/${kind === "pull" ? "pull" : "issues"}/${number}`;
 }
 
+async function getPullRequestTitle(repo: string, number: number): Promise<string> {
+    const result = await $`gh pr view ${number} --repo ${repo} --json title --jq .title`.quiet();
+    return result.stdout.toString().trim();
+}
+
 function pullFromActivity(activity: RepoActivity[]): Pull {
     const first = getActivityTarget(activity);
     const representative = representativeTargetEvent(activity) ?? first;
@@ -469,6 +474,14 @@ export async function getGitHubTriage(
             issues.push(issueFromActivity(items));
         }
     }
+
+    await Promise.all(
+        pullRequests
+            .filter(p => !p.title)
+            .map(async p => {
+                p.title = await getPullRequestTitle(p.repo, p.number);
+            }),
+    );
 
     const otherActivity = activity.filter(a => !isTargetedActivity(a));
 
