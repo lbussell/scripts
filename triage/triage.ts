@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
-import { getPullRequests, getIssues, getPipelineRuns, prefetchAzdoToken, getAzdoPullRequests, getRepoActivity } from "./triageLib.ts";
+import { getAzdoPullRequests, getPipelineRuns, prefetchAzdoToken } from "./azureDevOps.ts";
+import { getIssues, getPullRequests, getRepoActivity } from "./github.ts";
 
 const lookbackHours = 48;
 
