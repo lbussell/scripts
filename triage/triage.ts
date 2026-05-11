@@ -3,7 +3,7 @@
 import { getAzdoPullRequests, getPipelineRuns, prefetchAzdoToken, type AzdoPullRequest, type PipelineRun } from "./azureDevOps.ts";
 import { getGitHubTriage, type GetIssuesOptions, type GetPullRequestsOptions, type Issue, type Pull, type RepoActivity } from "./github.ts";
 
-const lookbackHours = 48;
+const lookbackHours = 24 * 4;
 
 const azdoOrg = "dnceng"
 const azdoProject = "internal"
@@ -112,21 +112,34 @@ const repoByPipelineScope = new Map(triageRepos.flatMap(repo => (repo.azdoPipeli
 function formatActivityAction(activity: RepoActivity): string {
     const review = activity.title.match(/^review \(([^)]+)\):/);
     if (review) {
-        return `review ${review[1]}`;
+        return `review ${review[1]}${activity.details ? `: ${activity.details}` : ""}`;
     }
     if (activity.type === "IssueComment") {
-        return "commented";
+        return `commented${activity.details ? `: ${activity.details}` : ""}`;
     }
     if (activity.type === "PullRequestReviewComment") {
-        return "review commented";
+        return `review commented${activity.details ? `: ${activity.details}` : ""}`;
     }
     if (activity.type === "PullRequest") {
+        if (activity.action === "labeled" && activity.details) {
+            return `PR added label "${activity.details}"`;
+        }
+        if (activity.action === "unlabeled" && activity.details) {
+            return `PR removed label "${activity.details}"`;
+        }
         return `PR ${activity.action}`;
     }
     if (activity.type === "Issues") {
+        if (activity.action === "labeled" && activity.details) {
+            return `issue added label "${activity.details}"`;
+        }
+        if (activity.action === "unlabeled" && activity.details) {
+            return `issue removed label "${activity.details}"`;
+        }
         return `issue ${activity.action}`;
     }
-    return [activity.type, activity.action].filter(Boolean).join(" ");
+    const action = [activity.type, activity.action].filter(Boolean).join(" ");
+    return `${action}${activity.details ? `: ${activity.details}` : ""}`;
 }
 
 function formatMetadata(items: string[]): string {
@@ -137,7 +150,11 @@ function formatMetadata(items: string[]): string {
 function printActivityBullets(activity: RepoActivity[] | undefined): void {
     for (const item of activity ?? []) {
         const when = item.createdAt.slice(0, 16).replace("T", " ");
-        console.log(`  - ${when}: @${item.actor} ${formatActivityAction(item)}`);
+        const [firstLine, ...remainingLines] = formatActivityAction(item).split(/\r?\n/);
+        console.log(`  - ${when}: @${item.actor} ${firstLine}`);
+        for (const line of remainingLines) {
+            console.log(`    ${line}`);
+        }
     }
 }
 

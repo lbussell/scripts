@@ -135,6 +135,7 @@ export interface RepoActivity {
     targetKind: "pull" | "issue" | "";
     targetNumber: number | null;
     title: string;
+    details: string;
     url: string;
     createdAt: string;
 }
@@ -249,6 +250,14 @@ function formatIssueTarget(number: number | null): string {
     return number === null ? "" : `#${number}`;
 }
 
+function textValue(value: unknown): string {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function labelName(payload: Record<string, any>): string {
+    return textValue(payload.label?.name);
+}
+
 function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
     const p = e.payload ?? {};
     let action = p.action ?? "";
@@ -257,6 +266,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
     let targetKind: RepoActivity["targetKind"] = "";
     let targetNumber: number | null = null;
     let title = "";
+    let details = "";
     let url = "";
 
     switch (e.type) {
@@ -275,6 +285,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             target = formatIssueTarget(targetNumber);
             ref = pr.head?.ref ?? "";
             title = pr.title ?? "";
+            details = labelName(p);
             url = pr.html_url ?? "";
             break;
         }
@@ -284,6 +295,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             targetNumber = parseTargetNumber(pr.number);
             target = formatIssueTarget(targetNumber);
             title = `review (${p.review?.state ?? ""}): ${pr.title ?? ""}`;
+            details = textValue(p.review?.body);
             url = p.review?.html_url ?? pr.html_url ?? "";
             break;
         }
@@ -293,6 +305,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             targetNumber = parseTargetNumber(pr.number);
             target = formatIssueTarget(targetNumber);
             title = `comment: ${pr.title ?? ""}`;
+            details = textValue(p.comment?.body);
             url = p.comment?.html_url ?? pr.html_url ?? "";
             break;
         }
@@ -302,6 +315,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             targetNumber = parseTargetNumber(issue.number);
             target = formatIssueTarget(targetNumber);
             title = `comment: ${issue.title ?? ""}`;
+            details = textValue(p.comment?.body);
             url = p.comment?.html_url ?? issue.html_url ?? "";
             break;
         }
@@ -311,6 +325,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             targetNumber = parseTargetNumber(issue.number);
             target = formatIssueTarget(targetNumber);
             title = issue.title ?? "";
+            details = labelName(p);
             url = issue.html_url ?? "";
             break;
         }
@@ -337,7 +352,8 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
             break;
         case "CommitCommentEvent": {
             target = (p.comment?.commit_id ?? "").slice(0, 7);
-            title = `comment: ${(p.comment?.body ?? "").split("\n")[0] ?? ""}`;
+            details = textValue(p.comment?.body);
+            title = `comment: ${details.split("\n")[0] ?? ""}`;
             url = p.comment?.html_url ?? "";
             break;
         }
@@ -355,6 +371,7 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
         targetKind,
         targetNumber,
         title,
+        details,
         url,
         createdAt: e.created_at,
     };
