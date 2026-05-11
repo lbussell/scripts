@@ -11,6 +11,8 @@ export interface Pull {
     isDraft: boolean;
     labels: string[];
     createdAt: string;
+    activity: RepoActivity[];
+    activityOnly?: boolean;
 }
 
 export interface GetPullRequestsOptions {
@@ -57,6 +59,7 @@ export async function getPullRequests(
         isDraft: item.isDraft,
         labels: item.labels.map(l => l.name),
         createdAt: item.createdAt,
+        activity: [],
     }));
 }
 
@@ -69,6 +72,8 @@ export interface Issue {
     url: string;
     labels: string[];
     createdAt: string;
+    activity: RepoActivity[];
+    activityOnly?: boolean;
 }
 
 export interface GetIssuesOptions {
@@ -116,6 +121,7 @@ export async function getIssues(
         url: item.url,
         labels: item.labels.map(l => l.name),
         createdAt: item.createdAt,
+        activity: [],
     }));
 }
 
@@ -126,9 +132,23 @@ export interface RepoActivity {
     actor: string;
     ref: string;
     target: string;
+    targetKind: "pull" | "issue" | "";
+    targetNumber: number | null;
     title: string;
     url: string;
     createdAt: string;
+}
+
+export interface GitHubTriage {
+    pullRequests: Pull[];
+    issues: Issue[];
+    otherActivity: RepoActivity[];
+}
+
+export interface GitHubTriageRepoConfig {
+    repo: string;
+    pullRequests?: GetPullRequestsOptions;
+    issues?: GetIssuesOptions;
 }
 
 interface GitHubEvent {
@@ -140,11 +160,102 @@ interface GitHubEvent {
     payload: Record<string, any>;
 }
 
+function targetKey(repo: string, kind: "pull" | "issue", number: number): string {
+    return `${repo}\0${kind}\0${number}`;
+}
+
+function isTargetedActivity(activity: RepoActivity): activity is RepoActivity & { targetKind: "pull" | "issue"; targetNumber: number } {
+    return (activity.targetKind === "pull" || activity.targetKind === "issue") && activity.targetNumber !== null;
+}
+
+function targetTitle(activity: RepoActivity[]): string {
+    return activity
+        .map(a => a.title.replace(/^review \([^)]+\):\s*/, "").replace(/^comment:\s*/, ""))
+        .find(Boolean) ?? "";
+}
+
+function getActivityTarget(activity: RepoActivity[]): RepoActivity & { targetKind: "pull" | "issue"; targetNumber: number } {
+    const first = activity[0]!;
+    if (!isTargetedActivity(first)) {
+        throw new Error("Cannot create a GitHub target from non-targeted activity.");
+    }
+    return first;
+}
+
+function representativeTargetEvent(activity: RepoActivity[]): RepoActivity | undefined {
+    return activity.find(a =>
+        (a.type === "PullRequest" || a.type === "Issues")
+        && ["merged", "closed", "opened", "reopened"].includes(a.action))
+        ?? activity.find(a => a.type === "PullRequest" || a.type === "Issues")
+        ?? activity[0];
+}
+
+function targetState(activity: RepoActivity[]): string {
+    return representativeTargetEvent(activity)?.action.toUpperCase() ?? "";
+}
+
+function targetUrl(repo: string, kind: "pull" | "issue", number: number): string {
+    return `https://github.com/${repo}/${kind === "pull" ? "pull" : "issues"}/${number}`;
+}
+
+function pullFromActivity(activity: RepoActivity[]): Pull {
+    const first = getActivityTarget(activity);
+    const representative = representativeTargetEvent(activity) ?? first;
+    return {
+        repo: first.repo,
+        number: first.targetNumber,
+        title: targetTitle(activity),
+        author: representative.actor,
+        branch: first.ref,
+        state: targetState(activity),
+        url: targetUrl(first.repo, "pull", first.targetNumber),
+        isDraft: false,
+        labels: [],
+        createdAt: "",
+        activity,
+        activityOnly: true,
+    };
+}
+
+function issueFromActivity(activity: RepoActivity[]): Issue {
+    const first = getActivityTarget(activity);
+    const representative = representativeTargetEvent(activity) ?? first;
+    return {
+        repo: first.repo,
+        number: first.targetNumber,
+        title: targetTitle(activity),
+        author: representative.actor,
+        state: targetState(activity),
+        url: targetUrl(first.repo, "issue", first.targetNumber),
+        labels: [],
+        createdAt: "",
+        activity,
+        activityOnly: true,
+    };
+}
+
+function parseTargetNumber(value: unknown): number | null {
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return value;
+    }
+    if (typeof value === "string") {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    }
+    return null;
+}
+
+function formatIssueTarget(number: number | null): string {
+    return number === null ? "" : `#${number}`;
+}
+
 function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
     const p = e.payload ?? {};
     let action = p.action ?? "";
     let ref = "";
     let target = "";
+    let targetKind: RepoActivity["targetKind"] = "";
+    let targetNumber: number | null = null;
     let title = "";
     let url = "";
 
@@ -159,7 +270,9 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
         }
         case "PullRequestEvent": {
             const pr = p.pull_request ?? {};
-            target = `#${pr.number ?? ""}`;
+            targetKind = "pull";
+            targetNumber = parseTargetNumber(pr.number ?? p.number);
+            target = formatIssueTarget(targetNumber);
             ref = pr.head?.ref ?? "";
             title = pr.title ?? "";
             url = pr.html_url ?? "";
@@ -167,22 +280,36 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
         }
         case "PullRequestReviewEvent": {
             const pr = p.pull_request ?? {};
-            target = `#${pr.number ?? ""}`;
+            targetKind = "pull";
+            targetNumber = parseTargetNumber(pr.number);
+            target = formatIssueTarget(targetNumber);
             title = `review (${p.review?.state ?? ""}): ${pr.title ?? ""}`;
             url = p.review?.html_url ?? pr.html_url ?? "";
             break;
         }
-        case "PullRequestReviewCommentEvent":
+        case "PullRequestReviewCommentEvent": {
+            const pr = p.pull_request ?? {};
+            targetKind = "pull";
+            targetNumber = parseTargetNumber(pr.number);
+            target = formatIssueTarget(targetNumber);
+            title = `comment: ${pr.title ?? ""}`;
+            url = p.comment?.html_url ?? pr.html_url ?? "";
+            break;
+        }
         case "IssueCommentEvent": {
-            const issue = p.issue ?? p.pull_request ?? {};
-            target = `#${issue.number ?? ""}`;
+            const issue = p.issue ?? {};
+            targetKind = issue.pull_request ? "pull" : "issue";
+            targetNumber = parseTargetNumber(issue.number);
+            target = formatIssueTarget(targetNumber);
             title = `comment: ${issue.title ?? ""}`;
             url = p.comment?.html_url ?? issue.html_url ?? "";
             break;
         }
         case "IssuesEvent": {
             const issue = p.issue ?? {};
-            target = `#${issue.number ?? ""}`;
+            targetKind = "issue";
+            targetNumber = parseTargetNumber(issue.number);
+            target = formatIssueTarget(targetNumber);
             title = issue.title ?? "";
             url = issue.html_url ?? "";
             break;
@@ -225,6 +352,8 @@ function summarizeEvent(repo: string, e: GitHubEvent): RepoActivity {
         actor: e.actor?.login ?? "",
         ref,
         target,
+        targetKind,
+        targetNumber,
         title,
         url,
         createdAt: e.created_at,
@@ -266,5 +395,69 @@ export async function getRepoActivity(
 
     return events
         .filter(e => new Date(e.created_at).getTime() >= cutoff)
+        .filter(e => e.type !== "WatchEvent")
         .map(e => summarizeEvent(repo, e));
+}
+
+export async function getGitHubTriage(
+    repos: GitHubTriageRepoConfig[],
+    hours: number,
+): Promise<GitHubTriage> {
+    const repoNames = repos.map(repo => repo.repo);
+    const [pullRequests, issues, activity] = await Promise.all([
+        Promise.all(repos.map(repo => getPullRequests(repo.repo, repo.pullRequests))).then(items => items.flat()),
+        Promise.all(repos.map(repo => getIssues(repo.repo, repo.issues))).then(items => items.flat()),
+        getRepoActivity(repoNames, hours),
+    ]);
+
+    activity.sort((a, b) =>
+        a.repo.localeCompare(b.repo)
+        || b.createdAt.localeCompare(a.createdAt));
+
+    const targetActivity = new Map<string, RepoActivity[]>();
+    for (const item of activity) {
+        if (!isTargetedActivity(item)) {
+            continue;
+        }
+        const key = targetKey(item.repo, item.targetKind, item.targetNumber);
+        const items = targetActivity.get(key);
+        if (items) {
+            items.push(item);
+        } else {
+            targetActivity.set(key, [item]);
+        }
+    }
+
+    const displayedTargetKeys = new Set([
+        ...pullRequests.map(p => targetKey(p.repo, "pull", p.number)),
+        ...issues.map(i => targetKey(i.repo, "issue", i.number)),
+    ]);
+
+    for (const pull of pullRequests) {
+        pull.activity = targetActivity.get(targetKey(pull.repo, "pull", pull.number)) ?? [];
+    }
+
+    for (const issue of issues) {
+        issue.activity = targetActivity.get(targetKey(issue.repo, "issue", issue.number)) ?? [];
+    }
+
+    for (const items of targetActivity.values()) {
+        const first = getActivityTarget(items);
+        if (displayedTargetKeys.has(targetKey(first.repo, first.targetKind, first.targetNumber))) {
+            continue;
+        }
+        if (first.targetKind === "pull") {
+            pullRequests.push(pullFromActivity(items));
+        } else {
+            issues.push(issueFromActivity(items));
+        }
+    }
+
+    const otherActivity = activity.filter(a => !isTargetedActivity(a));
+
+    return {
+        pullRequests,
+        issues,
+        otherActivity,
+    };
 }

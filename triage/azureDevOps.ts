@@ -4,6 +4,7 @@ export interface PipelineRun {
     org: string;
     project: string;
     repository: string;
+    definitionScope: string;
     definitionId: number;
     definitionName: string;
     buildId: number;
@@ -166,6 +167,7 @@ export async function getPipelineRuns(
         org,
         project,
         repository: b.repository?.name ?? b.repository?.id ?? "",
+        definitionScope: defIdToFolder.get(b.definition.id) ?? "",
         definitionId: b.definition.id,
         definitionName: b.definition.name,
         buildId: b.id,
